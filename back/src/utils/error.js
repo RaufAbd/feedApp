@@ -1,0 +1,8 @@
+exports.throwError = (message, statusCode, data = null) => {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  e;
+  error.data = data;
+
+  throw error;
+};
