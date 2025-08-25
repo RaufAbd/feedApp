@@ -4,11 +4,18 @@ const path = require("path");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const multer = require("multer");
+const { graphqlHTTP } = require("express-graphql");
 
-const feedRoutes = require("./routes/feed");
-const authRoutes = require("./routes/auth");
+const graphqlSchema = require("./graphql/schema");
+const graphqlResolver = require("./graphql/resolvers");
 
 const app = express();
+
+const CONNECTION_STRING = {
+  local: "mongodb://localhost:27017/feed",
+  remote:
+    "mongodb+srv://araxisr4:Df18gvd9ZN4MUOZE@cluster0.xeu9ywj.mongodb.net/feed?retryWrites=true&w=majority&appName=Cluster0",
+};
 
 const fileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -43,12 +50,20 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/feed", feedRoutes);
-app.use("/auth", authRoutes);
+app.use(
+  "/graphql",
+  graphqlHTTP({
+    schema: graphqlSchema,
+    rootValue: graphqlResolver,
+    graphiql: true,
+  })
+);
+
+app.use("/test", (req, res, next) => {
+  return res.status(200).json({ title: "Helloo" });
+});
 
 app.use((error, req, res, next) => {
-  console.log(error);
-
   const status = error.statusCode || 500;
   const message = error.message;
   const data = error.data;
@@ -57,19 +72,10 @@ app.use((error, req, res, next) => {
 });
 
 mongoose
-  .connect(
-    "mongodb+srv://araxisr4:Df18gvd9ZN4MUOZE@cluster0.xeu9ywj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-  )
+  .connect(CONNECTION_STRING.remote)
   .then((result) => {
-    const server = app.listen(8080);
-    const io = require("./socket").init(server);
-
-    io.on("connection", (socket) => {
-      console.log("Client connected!");
-    });
+    app.listen(8080);
   })
   .catch((err) => {
     console.log(err);
   });
-
-// app.listen(8080);
