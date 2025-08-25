@@ -17,7 +17,7 @@ class App extends Component {
   state = {
     showBackdrop: false,
     showMobileNav: false,
-    isAuth: false,
+    isAuth: true,
     token: null,
     userId: null,
     authLoading: false,
