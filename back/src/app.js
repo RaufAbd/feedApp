@@ -9,6 +9,8 @@ const { graphqlHTTP } = require("express-graphql");
 const graphqlSchema = require("./graphql/schema");
 const graphqlResolver = require("./graphql/resolvers");
 const auth = require("./middleware/auth");
+const { throwError } = require("./utils/error");
+const clearImage = require("./utils/clearImage");
 
 const app = express();
 
@@ -56,6 +58,29 @@ app.use((req, res, next) => {
 
 app.use(auth);
 
+app.put("/post-image", (req, res, next) => {
+  if (!req.isAuth) {
+    throwError("Not authenticated!", 422);
+  }
+
+  if (!req.file) {
+    throwError("No file provided!", 200);
+  }
+
+  if (req.body.oldPath) {
+    clearImage(req.body.oldPath);
+  }
+
+  const replacedPath = req.file.path.replace(/\\/g, "/");
+  const postId = req.body.id;
+
+  return res.status(201).json({
+    message: "Image loaded successfully!",
+    filePath: replacedPath,
+    postId,
+  });
+});
+
 app.use(
   "/graphql",
   graphqlHTTP({
@@ -71,10 +96,6 @@ app.use(
     },
   })
 );
-
-app.use("/test", (req, res, next) => {
-  return res.status(200).json({ title: "Helloo" });
-});
 
 app.use((error, req, res, next) => {
   const status = error.statusCode || 500;

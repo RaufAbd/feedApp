@@ -64,7 +64,10 @@ module.exports = {
     };
   },
 
-  createPost: async ({ postInput: { title, content, imageUrl } }, req) => {
+  createPost: async (
+    { postInput: { title, content, imageUrl, postId } },
+    req
+  ) => {
     if (!req.isAuth) {
       throwError("User is not authenticated!", 401);
     }
@@ -84,6 +87,28 @@ module.exports = {
 
     if (errors.length) {
       throwError("Input invalid!", 422, errors);
+    }
+
+    if (postId) {
+      const post = await Post.findById(postId).populate("creator");
+
+      if (!post) throwError("Could not find post.", 422);
+
+      if (post.creator._id.toString() !== req.userId) {
+        throwError("Not authorized!", 403);
+      }
+
+      post.imageUrl = imageUrl;
+      post.title = title;
+      post.content = content;
+      const editedPost = await post.save();
+
+      return {
+        ...editedPost._doc,
+        _id: editedPost._id.toString(),
+        createdAt: editedPost.createdAt.toISOString(),
+        updatedAt: editedPost.updatedAt.toISOString(),
+      };
     }
 
     const user = await User.findById(req.userId);

@@ -30,6 +30,7 @@ module.exports = buildSchema(`
         title: String!
         content: String!
         imageUrl: String!
+        postId: String
     }  
         
     type PostsData {
