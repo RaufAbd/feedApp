@@ -44,7 +44,7 @@ const fileFilter = (req, file, cb) => {
 
 app.use(bodyParser.json());
 app.use(multer({ storage: fileStorage, fileFilter }).single("image"));
-app.use("/images", express.static(path.join(__dirname, "images")));
+app.use("/images", express.static(path.join(__dirname, "..", "images")));
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -72,12 +72,10 @@ app.put("/post-image", (req, res, next) => {
   }
 
   const replacedPath = req.file.path.replace(/\\/g, "/");
-  const postId = req.body.id;
 
   return res.status(201).json({
     message: "Image loaded successfully!",
     filePath: replacedPath,
-    postId,
   });
 });
 
